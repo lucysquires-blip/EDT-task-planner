@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en-GB" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Content Review Quests</title>
+<style>
+:root{
+  --bg:#f6f3ff; --ink:#24204a; --muted:#6b6790; --card:#ffffff; --line:#e6e0ff;
+  --purple:#7c4dff; --pink:#ff4fa3; --orange:#ff9f1c; --yellow:#ffd23f;
+  --green:#2ec4b6; --blue:#3a86ff; --red:#ff5964;
+  --shadow:0 8px 24px rgba(76,48,170,.12); --radius:18px;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#16132b; --ink:#f3f0ff; --muted:#a9a3d1; --card:#221d40; --line:#352d63; --shadow:0 8px 24px rgba(0,0,0,.35); }
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,Roboto,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;
+  background-image:radial-gradient(circle at 10% 10%,rgba(255,79,163,.12) 0 160px,transparent 161px),
+  radial-gradient(circle at 90% 20%,rgba(58,134,255,.12) 0 200px,transparent 201px),
+  radial-gradient(circle at 50% 100%,rgba(255,210,63,.15) 0 240px,transparent 241px);background-attachment:fixed}
+button{font:inherit;cursor:pointer}
+a{color:var(--blue)}
+header{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:18px 28px;
+  background:linear-gradient(120deg,var(--purple),var(--pink) 55%,var(--orange));color:#fff;box-shadow:var(--shadow)}
+.logo{font-size:34px;animation:bob 3s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-5px) rotate(-6deg)}}
+header h1{margin:0;font-size:24px}
+header small{display:block;opacity:.92;font-size:13px}
+.spacer{flex:1}
+.who{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.18);padding:6px 8px 6px 14px;border-radius:999px}
+.who select{border:0;border-radius:999px;padding:6px 10px;font:inherit;background:#fff;color:#24204a;max-width:200px}
+.hbtn{background:rgba(255,255,255,.2);color:#fff;border:2px solid rgba(255,255,255,.5);border-radius:999px;padding:7px 14px;font-weight:600;text-decoration:none}
+.hbtn:hover{background:rgba(255,255,255,.35)}
+.sync{font-size:12px;padding:5px 10px;border-radius:999px;background:rgba(0,0,0,.18)}
+main{max-width:1360px;margin:0 auto;padding:22px 24px 80px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:20px}
+.stat{background:var(--card);border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow);display:flex;gap:14px;align-items:center;border-bottom:5px solid var(--c)}
+.stat .ic{font-size:30px;width:52px;height:52px;border-radius:16px;display:grid;place-items:center;background:color-mix(in srgb,var(--c) 18%,transparent)}
+.stat b{font-size:26px;display:block;line-height:1}
+.stat span{color:var(--muted);font-size:13px}
+.tabs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.tab{border:0;background:var(--card);color:var(--ink);padding:10px 18px;border-radius:999px;font-weight:700;box-shadow:var(--shadow);transition:transform .15s}
+.tab:hover{transform:translateY(-2px)}
+.tab.active{background:var(--ink);color:var(--bg)}
+.tab .count{display:inline-block;min-width:22px;padding:1px 7px;margin-inline-start:6px;border-radius:999px;background:var(--pink);color:#fff;font-size:12px}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:18px}
+.toolbar input,.toolbar select{border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:9px 12px;font:inherit}
+.toolbar input{min-width:220px;flex:1}
+.addbtn{border:0;border-radius:14px;padding:11px 20px;font-weight:800;color:#fff;background:linear-gradient(120deg,var(--green),var(--blue));box-shadow:var(--shadow)}
+.addbtn:hover{filter:brightness(1.08)}
+.board{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px;align-items:start}
+.col{background:color-mix(in srgb,var(--card) 70%,transparent);border-radius:22px;padding:14px;min-height:200px;border:2px dashed transparent;transition:border-color .15s,background .15s}
+.col.drag{border-color:var(--c);background:color-mix(in srgb,var(--c) 12%,var(--card))}
+.col h2{display:flex;align-items:center;gap:8px;margin:2px 4px 14px;font-size:17px}
+.col h2 .pill{margin-inline-start:auto;background:var(--c);color:#fff;border-radius:999px;padding:2px 10px;font-size:13px}
+.col h2 .dot{font-size:22px}
+.task{background:var(--card);border-radius:16px;padding:14px 14px 12px;margin-bottom:12px;box-shadow:var(--shadow);border-inline-start:7px solid var(--tc);position:relative;animation:pop .25s ease-out}
+.task[draggable="true"]{cursor:grab}
+.task:hover{transform:translateY(-2px);transition:transform .15s}
+.task.urgent::after{content:"🔥";position:absolute;top:-10px;inset-inline-end:-6px;font-size:22px;animation:bob 1.6s ease-in-out infinite}
+@keyframes pop{from{transform:scale(.92);opacity:0}}
+.task .top{display:flex;gap:10px;align-items:flex-start}
+.task .emo{font-size:26px;width:44px;height:44px;flex:none;border-radius:14px;display:grid;place-items:center;background:color-mix(in srgb,var(--tc) 20%,transparent)}
+.task h3{margin:0 0 4px;font-size:15px;line-height:1.35;word-break:break-word}
+.task .sub{color:var(--muted);font-size:12.5px}
+.warn{margin-top:8px;font-size:12.5px;background:#fff4d6;color:#7a5200;border-radius:10px;padding:6px 9px;line-height:1.4}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.tag{font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--line);color:var(--ink)}
+.tag.hot{background:#ffe0e3;color:#c41d2b}.tag.asap{background:#fff1cc;color:#9a6a00}.tag.chill{background:#d9f7f3;color:#137a70}
+.tag.rt{background:#e3ecff;color:#1f4fb8}.tag.req{background:#f2e6ff;color:#6a2fd6}
+.tag.late{background:var(--red);color:#fff}
+.actions{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;align-items:center}
+.act{border:0;border-radius:10px;padding:6px 10px;font-size:12.5px;font-weight:700;background:var(--line);color:var(--ink);text-decoration:none}
+.act:hover{filter:brightness(.95)}
+.act.claim{background:linear-gradient(120deg,var(--orange),var(--pink));color:#fff}
+.act.done{background:var(--green);color:#fff}
+.avatars{display:flex;align-items:center;gap:4px;margin-top:10px;font-size:12.5px;color:var(--muted);flex-wrap:wrap}
+.avatar{width:30px;height:30px;border-radius:50%;display:inline-grid;place-items:center;font-size:12px;font-weight:800;color:#fff;flex:none;border:2px solid var(--card)}
+.empty{text-align:center;color:var(--muted);padding:26px 10px;font-size:14px}
+.empty .big{font-size:42px;display:block;margin-bottom:6px}
+.people{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:18px}
+.person{background:var(--card);border-radius:22px;padding:16px;box-shadow:var(--shadow)}
+.person .ph{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.person .ph .avatar{width:46px;height:46px;font-size:16px}
+.bar{height:10px;border-radius:999px;background:var(--line);overflow:hidden;margin:4px 0 12px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--green),var(--blue));border-radius:999px;transition:width .5s}
+.mini{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:12px;background:color-mix(in srgb,var(--tc) 12%,transparent);margin-bottom:6px;font-size:13px;cursor:pointer;border:0;width:100%;text-align:start;color:var(--ink)}
+.mini span.t{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mini.isdone{opacity:.55;text-decoration:line-through}
+dialog{border:0;border-radius:24px;padding:0;width:min(640px,95vw);background:var(--card);color:var(--ink);box-shadow:0 30px 80px rgba(0,0,0,.35)}
+dialog::backdrop{background:rgba(30,20,70,.55);backdrop-filter:blur(3px)}
+.mh{padding:18px 22px;background:linear-gradient(120deg,var(--blue),var(--purple));color:#fff;display:flex;align-items:center;gap:10px}
+.mh h2{margin:0;font-size:19px}
+.mb{padding:18px 22px;display:grid;gap:12px;max-height:68vh;overflow:auto}
+.mb label{font-weight:700;font-size:13px;display:grid;gap:5px}
+.mb input,.mb textarea,.mb select{border:2px solid var(--line);border-radius:12px;padding:9px 11px;font:inherit;background:var(--bg);color:var(--ink)}
+.mb textarea{min-height:64px;resize:vertical}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:2px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:5px 11px 5px 5px;font-size:12.5px;font-weight:700;display:inline-flex;align-items:center;gap:6px}
+.chip .avatar{width:24px;height:24px;font-size:10px;border:0}
+.chip.sel{border-color:var(--purple);background:color-mix(in srgb,var(--purple) 16%,var(--bg))}
+.info{background:var(--bg);border-radius:14px;padding:12px 14px;font-size:13px;line-height:1.5;display:grid;gap:6px}
+.info b{color:var(--muted);font-weight:700}
+.mf{display:flex;justify-content:flex-end;gap:10px;padding:14px 22px 20px;flex-wrap:wrap}
+.btn{border:0;border-radius:12px;padding:10px 18px;font-weight:800;text-decoration:none}
+.btn.primary{background:linear-gradient(120deg,var(--green),var(--blue));color:#fff}
+.btn.ghost{background:var(--line);color:var(--ink)}
+.btn.link{background:transparent;color:var(--blue);margin-inline-end:auto;padding-inline:0}
+.note{font-size:12.5px;color:var(--muted);background:var(--bg);border-radius:12px;padding:10px 12px;line-height:1.5}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(120px);background:var(--ink);color:var(--bg);padding:12px 20px;border-radius:999px;font-weight:700;box-shadow:var(--shadow);transition:transform .3s;z-index:99}
+.toast.show{transform:translateX(-50%) translateY(0)}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:98}
+.hidden{display:none!important}
+@media (max-width:640px){header{padding:14px}.row{grid-template-columns:1fr}main{padding:16px 12px 80px}}
+</style>
+</head>
+<body>
+<canvas id="confetti"></canvas>
+<header>
+  <div class="logo">📚</div>
+  <div><h1>Content Review Quests</h1><small>Grab a review, polish it up, celebrate ✨</small></div>
+  <div class="spacer"></div>
+  <span class="sync" id="syncState">⚪ Not synced</span>
+  <button class="hbtn" id="refreshBtn" type="button">🔄 Refresh</button>
+  <a class="hbtn" id="listLink" target="_blank" rel="noopener">📋 Open list</a>
+  <div class="who"><span>🙋 I am</span><select id="meSelect" aria-label="Who are you?"></select></div>
+  <button class="hbtn" id="settingsBtn" type="button">⚙️</button>
+</header>
+
+<main>
+  <section class="stats" id="stats"></section>
+
+  <nav class="tabs" id="tabs">
+    <button class="tab active" data-view="mine" type="button">🦸 My Reviews<span class="count" id="cMine">0</span></button>
+    <button class="tab" data-view="pool" type="button">🎁 Up for Grabs<span class="count" id="cPool">0</span></button>
+    <button class="tab" data-view="team" type="button">🗺️ Team Board</button>
+    <button class="tab" data-view="people" type="button">👥 By Person</button>
+  </nav>
+
+  <div class="toolbar">
+    <input id="search" type="search" placeholder="🔍 Search chapter, requester, comments…" aria-label="Search">
+    <select id="filterService" aria-label="FC Service filter"><option value="">🏢 All services</option></select>
+    <select id="filterUrgent" aria-label="Urgency filter">
+      <option value="">🎚️ Any urgency</option><option value="urgent">🔥 Urgent only</option><option value="asap">⚡ ASAP</option><option value="date">📅 Specific date</option><option value="chill">🐢 When time allows</option>
+    </select>
+    <button class="addbtn" id="addBtn" type="button">➕ New Review</button>
+  </div>
+
+  <section id="view"></section>
+</main>
+
+<!-- Review modal -->
+<dialog id="taskDlg">
+  <form method="dialog" id="taskForm">
+    <div class="mh"><span id="dlgEmoji" style="font-size:26px">✨</span><h2 id="dlgTitle">New Review</h2></div>
+    <div class="mb">
+      <div class="info hidden" id="dlgInfo"></div>
+      <label>📖 Chapter / Section / Flavour<textarea id="fChapter" required placeholder="e.g. 11H Sex FF v 2.04"></textarea></label>
+      <div class="row">
+        <label>🏢 FC Service<select id="fService"></select></label>
+        <label>📄 Q&amp;A or precedent<select id="fContent"></select></label>
+      </div>
+      <div class="row">
+        <label>✍️ Review type<select id="fReview"></select></label>
+        <label>🔥 Urgent?<select id="fUrgent"><option>No</option><option>Yes</option></select></label>
+      </div>
+      <div class="row">
+        <label>⏱️ Deadline<select id="fDeadline"></select></label>
+        <label id="fDateWrap">📅 Specific date<input id="fDate" type="date"></label>
+      </div>
+      <label>💬 Further comments<textarea id="fComments" placeholder="Anything the reviewer should know"></textarea></label>
+      <div class="row" id="requesterRow">
+        <label>🙂 PSL initials<input id="fInitials" maxlength="10"></label>
+        <label>📧 Requester email<input id="fEmail" type="email"></label>
+      </div>
+      <div class="row">
+        <label>🚦 Progress<select id="fStatus"></select></label>
+        <div></div>
+      </div>
+      <div><b style="font-size:13px">👥 Allocations</b> <span class="note" style="padding:2px 8px">tap to toggle</span><div class="chips" id="fAlloc" style="margin-top:6px"></div></div>
+    </div>
+    <div class="mf">
+      <a class="btn link hidden" id="spLink" target="_blank" rel="noopener">↗️ Open in SharePoint</a>
+      <button class="btn ghost" type="button" id="cancelBtn">Cancel</button>
+      <button class="btn primary" type="submit">💾 Save</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Settings modal -->
+<dialog id="setDlg">
+  <form method="dialog" id="setForm">
+    <div class="mh"><span style="font-size:26px">⚙️</span><h2>Connection settings</h2></div>
+    <div class="mb">
+      <div class="note">Paste the HTTP trigger URLs from the two Power Automate flows. Leave blank to run in <b>demo mode</b> (sample data, saved in this browser only). Settings here apply to this browser only.</div>
+      <label>📥 "Get reviews" flow URL<input id="sGet" placeholder="https://…"></label>
+      <label>📤 "Save review" flow URL<input id="sSave" placeholder="https://…"></label>
+      <label>🚦 "In progress" choice value in the Progress column (blank = no In Progress column)<input id="sProg" placeholder="In progress"></label>
+      <label>⏱️ Auto-refresh every (minutes, 0 = off)<input id="sRefresh" type="number" min="0" max="60"></label>
+    </div>
+    <div class="mf">
+      <button class="btn ghost" id="resetDemo" type="button" style="margin-inline-end:auto">♻️ Reset demo data</button>
+      <button class="btn ghost" type="button" id="setCancel">Cancel</button>
+      <button class="btn primary" type="submit">✅ Save</button>
+    </div>
+  </form>
+</dialog>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* =====================================================================
+   CONFIG — set these before publishing so the whole team is connected.
+   Values saved in ⚙️ Settings (per browser) override getUrl / saveUrl.
+   ===================================================================== */
+const DEFAULT_CONFIG = {
+  getUrl: "",            // Flow 1 "Content Quests – Get reviews" HTTP URL
+  saveUrl: "",           // Flow 2 "Content Quests – Save review" HTTP URL
+  inProgressValue: "",   // set to "In progress" once that choice is added to the Progress column
+  refreshMinutes: 2,
+  listUrl: "https://chanceryventures.sharepoint.com/Content%20Team/Lists/Content%20reviews",
+  spHost: "https://chanceryventures.sharepoint.com",
+  emailDomain: "fromcounsel.com",
+  // Choices in the list's "Allocations" column
+  team: ["Fadi BouHadir","Jake Widjaya","Louise Heath","Janelle Lau","Patrick McGarrahan","Nikita Kandola","Rebecca Liesse",
+         "Esmée Pham","Annabel Maltman","Srishti Garg","Maeling Booth","Ariana Jahromi","Ke Xuan Tee","Arthur Adams",
+         "Celine Habbal","Ishaan Bhardwaj","Sienna Pearson","Rhiannon Hopcroft","Sami Baloch","Eleanor Razavi","Lucy Squires"],
+  services: ["Corporate","Employment","R&I","Disputes"],
+  contentTypes: ["Q&A Content","Precedent/Related Resource"],
+  reviewTypes: ["Copy edit","Top up","Specific"],
+  deadlines: ["ASAP","When time allows","Specific date (see below)"]
+};
+
+/* ---------------- state ---------------- */
+const LS = { cfg: "crq.config", tasks: "crq.tasks", me: "crq.me" };
+const saved = JSON.parse(localStorage.getItem(LS.cfg) || "{}");
+let cfg = Object.assign({}, DEFAULT_CONFIG);
+["getUrl","saveUrl","inProgressValue","refreshMinutes"].forEach(k => { if (saved[k] !== undefined && saved[k] !== "") cfg[k] = saved[k]; });
+let tasks = [];
+let me = localStorage.getItem(LS.me) || "";
+let view = "mine";
+let editing = null;
+let refreshTimer = null;
+
+const SERVICE_STYLE = {
+  "Corporate":  {emoji:"💼", colour:"#3a86ff"},
+  "Employment": {emoji:"👥", colour:"#ff4fa3"},
+  "R&I":        {emoji:"🔬", colour:"#2ec4b6"},
+  "Disputes":   {emoji:"⚖️", colour:"#ff9f1c"}
+};
+const AV_COLOURS = ["#7c4dff","#ff4fa3","#ff9f1c","#2ec4b6","#3a86ff","#ff5964","#8ac926","#c77dff","#f15bb5","#00bbf9"];
+const CONF_COLOURS = ["#7c4dff","#ff4fa3","#ff9f1c","#ffd23f","#2ec4b6","#3a86ff","#ff5964","#8ac926"];
+const statuses = () => [
+  {key:"To Do", icon:"📋", c:"#3a86ff"},
+  ...(cfg.inProgressValue ? [{key:"In Progress", icon:"⚙️", c:"#ff9f1c"}] : []),
+  {key:"Done", icon:"🏁", c:"#2ec4b6"}
+];
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const initials = n => (n||"?").split(/\s+/).filter(Boolean).map(w=>w[0]).join("").slice(0,2).toUpperCase();
+const avColour = n => { let h=0; for (const ch of (n||"")) h=(h*31+ch.charCodeAt(0))>>>0; return AV_COLOURS[h%AV_COLOURS.length]; };
+const todayISO = () => new Date().toISOString().slice(0,10);
+const isLive = () => !!(cfg.getUrl && cfg.saveUrl);
+const first = n => (n||"").split(" ")[0];
+
+/* ---------------- SharePoint item -> review ---------------- */
+// Works with Power Automate "Get items" output ({Value:..} objects) and plain strings.
+const val = v => v == null ? "" : Array.isArray(v) ? v.map(val).filter(Boolean)
+  : typeof v === "object" ? (v.Value ?? v.value ?? v.DisplayName ?? "") : String(v);
+function htmlToText(h){
+  if (!h) return "";
+  const doc = new DOMParser().parseFromString(String(h), "text/html");
+  return (doc.body.textContent || "").replace(/\s+/g," ").trim();
+}
+function htmlLinks(h){
+  if (!h) return [];
+  const doc = new DOMParser().parseFromString(String(h), "text/html");
+  return [...doc.querySelectorAll("a[href]")].map(a => {
+    let href = a.getAttribute("href") || "";
+    if (href.startsWith("/")) href = cfg.spHost + href;
+    return /^https:\/\//i.test(href) ? {href, text: (a.textContent||"Link").trim()} : null;
+  }).filter(Boolean);
+}
+const meaningful = s => s && !/^(n\/?a|no|none|-)\.?$/i.test(s.trim());
+function parseDate(s){
+  if (!s) return "";
+  s = String(s).trim();
+  let m = s.match(/^(\d{4})-(\d{2})-(\d{2})/); if (m) return `${m[1]}-${m[2]}-${m[3]}`;
+  m = s.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{2,4})$/);
+  if (m){ const y = m[3].length===2 ? "20"+m[3] : m[3]; return `${y}-${m[2].padStart(2,"0")}-${m[1].padStart(2,"0")}`; }
+  return "";
+}
+function shortReview(r){
+  if (!r) return "";
+  if (/^copy/i.test(r)) return "Copy edit";
+  if (/^top/i.test(r)) return "Top up";
+  if (/^specific/i.test(r)) return "Specific";
+  return r;
+}
+function normalise(t){
+  const progress = val(t.Porgress ?? t.progress);
+  const svc = val(t.FC_x0020_Service ?? t.service);
+  const style = SERVICE_STYLE[svc] || {emoji:"📄", colour:"#7c4dff"};
+  const status = progress === "Complete" ? "Done"
+    : (cfg.inProgressValue && progress === cfg.inProgressValue) ? "In Progress" : "To Do";
+  const specificDate = val(t.Datedeadline ?? t.specificDate);
+  return {
+    id: String(t.ID ?? t.id ?? ""),
+    initials: val(t.Title ?? t.initials).trim(),
+    email: val(t.Email ?? t.email),
+    chapter: val(t.Chapter_x002f_Section_x002f_Flav ?? t.chapter) || "(no chapter given)",
+    service: svc,
+    contentType: val(t.Q_x0026_A_x0020_or_x0020_precede ?? t.contentType),
+    reviewType: val(t.Review_x0020_type ?? t.reviewType),
+    urgent: val(t.Urgent ?? t.urgent) === "Yes",
+    deadline: val(t.Deadline ?? t.deadline),
+    specificDate, due: parseDate(specificDate),
+    comments: val(t.Furthercomments ?? t.comments),
+    doNot: val(t.DONOT ?? t.doNot),
+    breadth: val(t.Breadth_x003f_ ?? t.breadth),
+    partial: htmlToText(val(t.If_x0020_partial_x002c__x0020_wh ?? t.partial)),
+    draftOrPublished: val(t.Draftorpublished_x003f_ ?? t.draftOrPublished),
+    requests: [].concat(val(t.Specificreviewrequests ?? t.requests)).filter(meaningful),
+    links: [...htmlLinks(val(t.Compare)), ...htmlLinks(val(t.Offlineversion))],
+    allocations: [].concat(val(t.Alllocations ?? t.allocations)).filter(Boolean),
+    progress, status,
+    created: val(t.Created ?? t.created),
+    modified: val(t.Modified ?? t.modified),
+    emoji: style.emoji, colour: style.colour
+  };
+}
+
+/* ---------------- demo data (fictional) ---------------- */
+function demoItems(){
+  const d = n => { const x = new Date(); x.setDate(x.getDate()+n); return x.toISOString().slice(0,10); };
+  const T = cfg.team, now = new Date().toISOString();
+  return [
+    {ID:9001,Title:"AB",Email:"a.bloggs@"+cfg.emailDomain,Chapter_x002f_Section_x002f_Flav:"11B Age FF v 3.02",FC_x0020_Service:"Employment",Q_x0026_A_x0020_or_x0020_precede:"Q&A Content",Review_x0020_type:"Copy edit",Urgent:"Yes",Deadline:"ASAP",Specificreviewrequests:["Spelling, punctuation & grammar","Bookmarking & cross-references"],Alllocations:[],Created:now},
+    {ID:9002,Title:"CD",Chapter_x002f_Section_x002f_Flav:"20F Shadow directors skim",FC_x0020_Service:"R&I",Q_x0026_A_x0020_or_x0020_precede:"Q&A Content",Review_x0020_type:"Top up",Urgent:"No",Deadline:"When time allows",Alllocations:[],Created:now},
+    {ID:9003,Title:"EF",Chapter_x002f_Section_x002f_Flav:"5F Part 18 request – precedent letter",FC_x0020_Service:"Disputes",Q_x0026_A_x0020_or_x0020_precede:"Precedent/Related Resource",Review_x0020_type:"Specific",Urgent:"No",Deadline:"Specific date (see below)",Datedeadline:d(4),Alllocations:[],Furthercomments:"Please check citations only.",Created:now},
+    {ID:9004,Title:"GH",Chapter_x002f_Section_x002f_Flav:"23G FF v 1.11",FC_x0020_Service:"Corporate",Q_x0026_A_x0020_or_x0020_precede:"Q&A Content",Review_x0020_type:"Copy edit",Urgent:"No",Deadline:"Specific date (see below)",Datedeadline:d(-1),Alllocations:[T[20]||T[0]],DONOT:"Please don't change the red notes – they're for round 2.",Created:now},
+    {ID:9005,Title:"IJ",Chapter_x002f_Section_x002f_Flav:"15A Whistleblowing FF – Qs 66–72 only",FC_x0020_Service:"Employment",Q_x0026_A_x0020_or_x0020_precede:"Q&A Content",Review_x0020_type:"Top up",Urgent:"Yes",Deadline:"ASAP",Alllocations:[T[20]||T[0],T[13]],Breadth_x003f_:"Only part of the document to be reviewed",Created:now},
+    {ID:9006,Title:"KL",Chapter_x002f_Section_x002f_Flav:"Disciplinary precedents folder – house style",FC_x0020_Service:"Employment",Q_x0026_A_x0020_or_x0020_precede:"Precedent/Related Resource",Review_x0020_type:"Copy edit",Urgent:"No",Deadline:"When time allows",Alllocations:[T[1]],Created:now},
+    {ID:9007,Title:"MN",Chapter_x002f_Section_x002f_Flav:"7F PSC v 8.55",FC_x0020_Service:"Corporate",Q_x0026_A_x0020_or_x0020_precede:"Q&A Content",Review_x0020_type:"Copy edit",Urgent:"No",Deadline:"ASAP",Alllocations:[T[11]],Porgress:"Complete",Created:now},
+    {ID:9008,Title:"OP",Chapter_x002f_Section_x002f_Flav:"1F FF v 5.99 – bookmark Q90 and Q91",FC_x0020_Service:"Corporate",Q_x0026_A_x0020_or_x0020_precede:"Q&A Content",Review_x0020_type:"Specific",Urgent:"No",Deadline:"When time allows",Alllocations:[T[20]||T[0]],Porgress:"Complete",Created:now}
+  ];
+}
+
+/* ---------------- backend ---------------- */
+async function load(silent){
+  if (!isLive()){
+    const s = localStorage.getItem(LS.tasks);
+    const raw = s ? JSON.parse(s) : demoItems();
+    localStorage.setItem(LS.tasks, JSON.stringify(raw));
+    tasks = raw.map(normalise);
+    setSync("🟡 Demo mode – sample data");
+    render(); return true;
+  }
+  if (!silent) setSync("🔄 Syncing…");
+  try{
+    const r = await fetch(cfg.getUrl, {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({action:"list"})});
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const data = await r.json();
+    const list = Array.isArray(data) ? data : (data.tasks || data.value || []);
+    tasks = list.map(normalise);
+    setSync("🟢 Synced " + new Date().toLocaleTimeString("en-GB", {hour:"2-digit",minute:"2-digit"}));
+    render(); return true;
+  }catch(e){
+    console.error(e);
+    setSync("🔴 Sync failed");
+    toast("😬 Couldn't reach SharePoint – check the flow URLs in ⚙️");
+    render(); return false;
+  }
+}
+
+function toPayload(action, t){
+  const progress = t.status === "Done" ? "Complete" : (t.status === "In Progress" ? cfg.inProgressValue : "");
+  return {
+    action, id: t.id ? Number(t.id) : null,
+    title: t.initials, email: t.email, chapter: t.chapter, service: t.service,
+    contentType: t.contentType, reviewType: t.reviewType, urgent: t.urgent ? "Yes" : "No",
+    deadline: t.deadline, specificDate: t.specificDate, comments: t.comments,
+    allocations: t.allocations.map(v => ({Value: v})), progress
+  };
+}
+
+async function save(action, t){
+  if (!isLive()){
+    const raw = JSON.parse(localStorage.getItem(LS.tasks) || "[]");
+    const p = toPayload(action, t);
+    const item = {ID: p.id || Date.now(), Title:p.title, Email:p.email, Chapter_x002f_Section_x002f_Flav:p.chapter, FC_x0020_Service:p.service,
+      Q_x0026_A_x0020_or_x0020_precede:p.contentType, Review_x0020_type:p.reviewType, Urgent:p.urgent, Deadline:p.deadline,
+      Datedeadline:p.specificDate, Furthercomments:p.comments, Alllocations:t.allocations, Porgress:p.progress, Created:t.created || new Date().toISOString()};
+    const i = raw.findIndex(x => String(x.ID) === String(item.ID));
+    if (i >= 0) raw[i] = Object.assign(raw[i], item); else raw.unshift(item);
+    localStorage.setItem(LS.tasks, JSON.stringify(raw));
+    tasks = raw.map(normalise); render(); return true;
+  }
+  setSync("🔄 Saving…");
+  try{
+    const r = await fetch(cfg.saveUrl, {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(toPayload(action, t))});
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    await load(true);
+    return true;
+  }catch(e){
+    console.error(e);
+    setSync("🔴 Save failed");
+    toast("😬 Save failed – nothing was changed in SharePoint");
+    return false;
+  }
+}
+function setSync(s){ $("#syncState").textContent = s; }
+
+/* ---------------- rendering ---------------- */
+function urgencyKey(t){
+  if (t.deadline.startsWith("ASAP")) return "asap";
+  if (t.deadline.startsWith("Specific")) return "date";
+  if (t.deadline.startsWith("When")) return "chill";
+  return "";
+}
+function filtered(list){
+  const q = $("#search").value.trim().toLowerCase();
+  const s = $("#filterService").value, u = $("#filterUrgent").value;
+  return list.filter(t =>
+    (!q || [t.chapter,t.initials,t.email,t.comments,t.service,t.reviewType,t.allocations.join(" ")].join(" ").toLowerCase().includes(q)) &&
+    (!s || t.service === s) &&
+    (!u || (u === "urgent" ? t.urgent : urgencyKey(t) === u)));
+}
+const sortTasks = list => list.sort((a,b) =>
+  (b.urgent - a.urgent) || (a.due||"9999").localeCompare(b.due||"9999") ||
+  (urgencyKey(a)==="asap" ? -1 : 0) - (urgencyKey(b)==="asap" ? -1 : 0) || (a.created||"").localeCompare(b.created||""));
+const isLate = t => t.status !== "Done" && t.due && t.due < todayISO();
+function deadlineTag(t){
+  const k = urgencyKey(t);
+  if (k === "date"){
+    if (!t.due) return t.specificDate ? `<span class="tag">📅 ${esc(t.specificDate)}</span>` : `<span class="tag">📅 Date TBC</span>`;
+    if (isLate(t)) return `<span class="tag late">⏰ Overdue · ${fmt(t.due)}</span>`;
+    return `<span class="tag">${t.due===todayISO()?"📍 Due today":"📅 "+fmt(t.due)}</span>`;
+  }
+  if (k === "asap") return `<span class="tag asap">⚡ ASAP</span>`;
+  if (k === "chill") return `<span class="tag chill">🐢 When time allows</span>`;
+  return "";
+}
+const fmt = iso => new Date(iso+"T00:00").toLocaleDateString("en-GB",{day:"numeric",month:"short"});
+function avatar(n){ return `<span class="avatar" title="${esc(n)}" style="background:${avColour(n)}">${esc(initials(n))}</span>`; }
+const trunc = (s,n) => s.length > n ? s.slice(0,n-1) + "…" : s;
+
+function card(t){
+  const mine = t.allocations.includes(me);
+  const acts = [];
+  if (t.status !== "Done" && me && !mine)
+    acts.push(`<button class="act claim" data-act="claim" data-id="${esc(t.id)}" type="button">${t.allocations.length ? "🤝 Join in" : "🙋 I'll take it!"}</button>`);
+  if (mine && t.status === "To Do" && cfg.inProgressValue) acts.push(`<button class="act" data-act="start" data-id="${esc(t.id)}" type="button">▶️ Start</button>`);
+  if (mine && t.status !== "Done") acts.push(`<button class="act done" data-act="done" data-id="${esc(t.id)}" type="button">✅ Complete</button>`);
+  if (mine && t.status !== "Done") acts.push(`<button class="act" data-act="release" data-id="${esc(t.id)}" type="button">↩️ Release</button>`);
+  if (t.status === "Done" && mine) acts.push(`<button class="act" data-act="reopen" data-id="${esc(t.id)}" type="button">🔁 Reopen</button>`);
+  acts.push(`<button class="act" data-act="open" data-id="${esc(t.id)}" type="button">🔎 Details</button>`);
+  const tags = [
+    t.reviewType ? `<span class="tag rt">✍️ ${esc(shortReview(t.reviewType))}</span>` : "",
+    deadlineTag(t),
+    t.contentType ? `<span class="tag">${t.contentType.startsWith("Q&A")?"❓":"📑"} ${esc(t.contentType.startsWith("Q&A")?"Q&A":"Precedent")}</span>` : "",
+    ...t.requests.slice(0,2).map(r => `<span class="tag req">🎯 ${esc(trunc(r,26))}</span>`),
+    t.requests.length > 2 ? `<span class="tag req">+${t.requests.length-2} more</span>` : ""
+  ].join("");
+  return `<article class="task ${t.urgent && t.status!=="Done"?"urgent":""}" draggable="${mine||!t.allocations.length?"true":"false"}" data-id="${esc(t.id)}" style="--tc:${t.colour}">
+    <div class="top"><div class="emo">${t.emoji}</div>
+      <div><h3>${esc(trunc(t.chapter,140))}</h3>
+      <div class="sub">📨 ${esc(t.initials||"?")} · ${esc(t.service||"No service")}</div></div></div>
+    ${meaningful(t.doNot) ? `<div class="warn">⚠️ ${esc(trunc(t.doNot,140))}</div>` : ""}
+    <div class="tags">${tags}</div>
+    <div class="avatars">${t.allocations.length ? t.allocations.map(avatar).join("") + `<span style="margin-inline-start:4px">${esc(t.allocations.map(first).join(", "))}${mine?" (incl. you)":""}</span>` : "🎁 Unallocated"}</div>
+    <div class="actions">${acts.join("")}</div>
+  </article>`;
+}
+function empty(icon,msg){ return `<div class="empty"><span class="big">${icon}</span>${msg}</div>`; }
+
+function board(list, msgs){
+  return `<div class="board">` + statuses().map(s => {
+    const items = sortTasks(list.filter(t => t.status === s.key));
+    return `<div class="col" data-status="${s.key}" style="--c:${s.c}">
+      <h2><span class="dot">${s.icon}</span>${s.key === "Done" ? "Complete" : s.key}<span class="pill">${items.length}</span></h2>
+      ${items.map(card).join("") || empty(msgs[s.key][0], msgs[s.key][1])}
+    </div>`;
+  }).join("") + `</div>`;
+}
+
+function render(){
+  const all = tasks;
+  const open = all.filter(t => t.status !== "Done");
+  const mineAll = me ? all.filter(t => t.allocations.includes(me)) : [];
+  const pool = open.filter(t => !t.allocations.length);
+  $("#cMine").textContent = mineAll.filter(t=>t.status!=="Done").length;
+  $("#cPool").textContent = pool.length;
+
+  const stats = [
+    ["🦸","My open reviews", mineAll.filter(t=>t.status!=="Done").length, "#7c4dff"],
+    ["🏆","I've completed*", mineAll.filter(t=>t.status==="Done").length, "#ffd23f"],
+    ["🎁","Up for grabs", pool.length, "#ff4fa3"],
+    ["🔥","Urgent & open", open.filter(t=>t.urgent).length, "#ff5964"],
+    ["📚","Team open", open.length, "#3a86ff"],
+    ["⏰","Overdue", open.filter(isLate).length, "#ff9f1c"]
+  ];
+  $("#stats").innerHTML = stats.map(([i,l,v,c]) => `<div class="stat" style="--c:${c}"><div class="ic">${i}</div><div><b>${v}</b><span>${l}</span></div></div>`).join("");
+
+  let html = "";
+  const msgs = {
+    "To Do":["🌈","Nothing waiting – check <b>Up for Grabs</b>!"],
+    "In Progress":["☕","Nothing in flight."],
+    "Done":["🎯","Completed reviews from the last 30 days show here."]
+  };
+  if (view === "mine"){
+    html = me ? board(filtered(mineAll), msgs) : empty("🙋","Pick your name from <b>I am</b> at the top to see your reviews.");
+  } else if (view === "pool"){
+    const list = sortTasks(filtered(pool));
+    html = list.length ? `<div class="board">${list.map(card).join("")}</div>` : empty("🎉","Every review has been allocated. Legends!");
+  } else if (view === "team"){
+    html = board(filtered(all), msgs);
+  } else {
+    const names = [...new Set([...cfg.team, ...all.flatMap(t=>t.allocations)])];
+    const cards = names.map(n => {
+      const theirs = sortTasks(filtered(all.filter(t=>t.allocations.includes(n))));
+      return {n, theirs, openCount: theirs.filter(t=>t.status!=="Done").length};
+    }).filter(p => p.theirs.length || cfg.team.includes(p.n))
+      .sort((a,b) => (b.n===me)-(a.n===me) || b.openCount-a.openCount || a.n.localeCompare(b.n));
+    html = `<div class="people">` + cards.map(({n,theirs,openCount}) => {
+      const d = theirs.length - openCount;
+      const pct = theirs.length ? Math.round(d/theirs.length*100) : 0;
+      const items = theirs.sort((a,b)=>(a.status==="Done")-(b.status==="Done"))
+        .map(t=>`<button type="button" class="mini ${t.status==="Done"?"isdone":""}" data-act="open" data-id="${esc(t.id)}" style="--tc:${t.colour}">${t.emoji} <span class="t">${esc(t.chapter)}</span> ${t.urgent&&t.status!=="Done"?"🔥":""}${statuses().find(s=>s.key===t.status).icon}</button>`).join("");
+      return `<div class="person"><div class="ph">${avatar(n)}<div><b>${esc(n)}${n===me?" (you)":""}</b><div style="font-size:12.5px;color:var(--muted)">${openCount} open · ${d} complete*</div></div></div>
+        <div class="bar"><i style="width:${pct}%"></i></div>${items || empty("🏖️","Free for a new review")}</div>`;
+    }).join("") + `</div>`;
+  }
+  html += `<p class="note" style="margin-top:18px">* Completed counts cover reviews the flow returns (open items plus anything completed in the last 30 days).</p>`;
+  $("#view").innerHTML = html;
+}
+
+/* ---------------- actions ---------------- */
+// Re-reads SharePoint first so we never overwrite someone else's allocation.
+async function change(id, mutate, msg){
+  if (isLive()) await load(true);
+  const t = tasks.find(x => x.id === id);
+  if (!t){ toast("🤔 That review has moved or been removed"); return; }
+  const next = JSON.parse(JSON.stringify(t));
+  const wasDone = t.status === "Done";
+  mutate(next);
+  if (await save("update", next)){
+    if (msg) toast(msg);
+    if (!wasDone && next.status === "Done") confetti();
+  }
+}
+function handleAction(e){
+  const b = e.target.closest("[data-act]"); if (!b) return;
+  const id = b.dataset.id, a = b.dataset.act;
+  if (a === "open") { openTask(tasks.find(t=>t.id===id)); return; }
+  if (!me) { toast("🙋 Pick your name at the top first"); return; }
+  if (a === "claim") change(id, t => { if (!t.allocations.includes(me)) t.allocations.push(me); }, "🙌 You're on it, " + first(me) + "!");
+  if (a === "start") change(id, t => { t.status = "In Progress"; }, "🚀 Review started!");
+  if (a === "done") change(id, t => { t.status = "Done"; }, "🏆 Review complete! Nice one!");
+  if (a === "reopen") change(id, t => { t.status = "To Do"; }, "🔁 Reopened");
+  if (a === "release") change(id, t => { t.allocations = t.allocations.filter(n => n !== me); }, "↩️ Released");
+}
+$("#view").addEventListener("click", handleAction);
+
+// drag & drop between columns
+let dragId = null;
+$("#view").addEventListener("dragstart", e => { const c = e.target.closest(".task"); if (c){ dragId = c.dataset.id; e.dataTransfer.effectAllowed = "move"; }});
+$("#view").addEventListener("dragover", e => { const col = e.target.closest(".col"); if (col && dragId){ e.preventDefault(); col.classList.add("drag"); }});
+$("#view").addEventListener("dragleave", e => { const col = e.target.closest(".col"); if (col) col.classList.remove("drag"); });
+$("#view").addEventListener("drop", e => {
+  const col = e.target.closest(".col"); if (!col || !dragId) return;
+  e.preventDefault(); col.classList.remove("drag");
+  const id = dragId, st = col.dataset.status; dragId = null;
+  const t = tasks.find(x => x.id === id);
+  if (!t || t.status === st) return;
+  if (!me) { toast("🙋 Pick your name at the top first"); return; }
+  change(id, x => { x.status = st; if (st !== "To Do" && !x.allocations.includes(me)) x.allocations.push(me); },
+    statuses().find(s=>s.key===st).icon + " Moved to " + (st === "Done" ? "Complete" : st));
+});
+
+/* ---------------- review modal ---------------- */
+let selAlloc = [];
+const opts = (list, cur) => [...new Set([...(cur && !list.includes(cur) ? [cur] : []), ...list])]
+  .map(v => `<option value="${esc(v)}"${v===cur?" selected":""}>${esc(v)}</option>`).join("");
+function drawChips(){
+  const names = [...new Set([...cfg.team, ...selAlloc])];
+  $("#fAlloc").innerHTML = names.map(n => `<button type="button" class="chip ${selAlloc.includes(n)?"sel":""}" data-n="${esc(n)}">${avatar(n)}${esc(n)}</button>`).join("");
+}
+$("#fAlloc").addEventListener("click", e => {
+  const b = e.target.closest("[data-n]"); if (!b) return;
+  const n = b.dataset.n;
+  selAlloc = selAlloc.includes(n) ? selAlloc.filter(x => x !== n) : [...selAlloc, n];
+  drawChips();
+});
+function toggleDate(){ $("#fDateWrap").classList.toggle("hidden", !$("#fDeadline").value.startsWith("Specific")); }
+$("#fDeadline").addEventListener("change", toggleDate);
+
+function infoBlock(t){
+  const rows = [
+    ["📨 Requested by", [t.initials, t.email].filter(Boolean).map(esc).join(" · ")],
+    ["🗓️ Submitted", t.created ? new Date(t.created).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}) : ""],
+    ["📏 Breadth", esc(t.breadth)],
+    ["✂️ Which part", esc(t.partial)],
+    ["📰 Draft or published", esc(t.draftOrPublished)],
+    ["🎯 Specific requests", t.requests.map(esc).join(", ")],
+    ["⚠️ Do not", meaningful(t.doNot) ? esc(t.doNot) : ""],
+    ["🔗 Files", t.links.map(l => `<a href="${esc(l.href)}" target="_blank" rel="noopener">${esc(l.text)}</a>`).join(" · ")]
+  ].filter(r => r[1] && meaningful(String(r[1])));
+  return rows.map(([k,v]) => `<div><b>${k}:</b> ${v}</div>`).join("");
+}
+function openTask(t){
+  if (t === undefined) return;
+  editing = t || null;
+  const blank = {chapter:"", service:"", contentType:cfg.contentTypes[0], reviewType:cfg.reviewTypes[0], urgent:false,
+    deadline:cfg.deadlines[1], due:"", comments:"", allocations: me ? [me] : [], status:"To Do",
+    initials: me ? initials(me) : "", email: me ? me.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().split(" ").join(".") + "@" + cfg.emailDomain : ""};
+  const x = t || blank;
+  $("#dlgTitle").textContent = t ? "Review details" : "New Review";
+  $("#dlgEmoji").textContent = t ? t.emoji : "✨";
+  $("#dlgInfo").innerHTML = t ? infoBlock(t) : "";
+  $("#dlgInfo").classList.toggle("hidden", !t || !$("#dlgInfo").innerHTML);
+  $("#fChapter").value = x.chapter;
+  $("#fService").innerHTML = `<option value="">—</option>` + opts(cfg.services, x.service);
+  $("#fContent").innerHTML = `<option value="">—</option>` + opts(cfg.contentTypes, x.contentType);
+  $("#fReview").innerHTML = `<option value="">—</option>` + opts(cfg.reviewTypes, x.reviewType);
+  $("#fUrgent").value = x.urgent ? "Yes" : "No";
+  $("#fDeadline").innerHTML = `<option value="">—</option>` + opts(cfg.deadlines, x.deadline);
+  $("#fDate").value = x.due || "";
+  $("#fComments").value = x.comments;
+  $("#fInitials").value = x.initials; $("#fEmail").value = x.email;
+  $("#requesterRow").classList.toggle("hidden", !!t);
+  $("#fStatus").innerHTML = statuses().map(s => `<option value="${s.key}"${s.key===x.status?" selected":""}>${s.icon} ${s.key==="Done"?"Complete":s.key}</option>`).join("");
+  selAlloc = [...x.allocations];
+  drawChips(); toggleDate();
+  const sp = $("#spLink");
+  if (t && isLive() && t.id){ sp.href = cfg.listUrl + "/DispForm.aspx?ID=" + encodeURIComponent(t.id); sp.classList.remove("hidden"); }
+  else sp.classList.add("hidden");
+  $("#taskDlg").showModal();
+}
+$("#addBtn").addEventListener("click", () => openTask(null));
+$("#cancelBtn").addEventListener("click", () => $("#taskDlg").close());
+$("#taskForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const chapter = $("#fChapter").value.trim(); if (!chapter) return;
+  const t = editing ? JSON.parse(JSON.stringify(editing)) : {id:"", allocations:[], created:""};
+  Object.assign(t, {
+    chapter, service: $("#fService").value, contentType: $("#fContent").value, reviewType: $("#fReview").value,
+    urgent: $("#fUrgent").value === "Yes", deadline: $("#fDeadline").value, comments: $("#fComments").value.trim(),
+    allocations: selAlloc, status: $("#fStatus").value
+  });
+  const pickedDate = $("#fDate").value;
+  if (t.deadline.startsWith("Specific")) { if (pickedDate) t.specificDate = pickedDate; }
+  else if (!editing) t.specificDate = "";
+  if (!editing){ t.initials = $("#fInitials").value.trim(); t.email = $("#fEmail").value.trim(); }
+  const wasDone = editing && editing.status === "Done";
+  $("#taskDlg").close();
+  if (await save(editing ? "update" : "create", t)){
+    toast(editing ? "💾 Review updated" : "✨ New review added to the list!");
+    if (!wasDone && t.status === "Done") confetti();
+  }
+});
+
+/* ---------------- settings ---------------- */
+$("#settingsBtn").addEventListener("click", () => {
+  $("#sGet").value = cfg.getUrl; $("#sSave").value = cfg.saveUrl;
+  $("#sProg").value = cfg.inProgressValue; $("#sRefresh").value = cfg.refreshMinutes;
+  $("#setDlg").showModal();
+});
+$("#setCancel").addEventListener("click", () => $("#setDlg").close());
+$("#setForm").addEventListener("submit", e => {
+  e.preventDefault();
+  cfg.getUrl = $("#sGet").value.trim(); cfg.saveUrl = $("#sSave").value.trim();
+  cfg.inProgressValue = $("#sProg").value.trim();
+  cfg.refreshMinutes = Math.max(0, parseInt($("#sRefresh").value || "0", 10));
+  localStorage.setItem(LS.cfg, JSON.stringify({getUrl:cfg.getUrl, saveUrl:cfg.saveUrl, inProgressValue:cfg.inProgressValue, refreshMinutes:cfg.refreshMinutes}));
+  $("#setDlg").close(); startTimer(); load(); toast("⚙️ Settings saved");
+});
+$("#resetDemo").addEventListener("click", () => {
+  if (!confirm("Reset the demo data in this browser?")) return;
+  localStorage.removeItem(LS.tasks); $("#setDlg").close(); load(); toast("♻️ Demo data reset");
+});
+
+/* ---------------- misc ---------------- */
+function fillMe(){
+  $("#meSelect").innerHTML = `<option value="">— choose —</option>` + cfg.team.map(n=>`<option${n===me?" selected":""}>${esc(n)}</option>`).join("");
+}
+$("#meSelect").addEventListener("change", e => {
+  me = e.target.value; localStorage.setItem(LS.me, me); render();
+  if (me) toast("👋 Hi " + first(me) + "!");
+});
+$("#tabs").addEventListener("click", e => {
+  const b = e.target.closest(".tab"); if (!b) return;
+  document.querySelectorAll(".tab").forEach(x => x.classList.toggle("active", x === b));
+  view = b.dataset.view; render();
+});
+["#search","#filterService","#filterUrgent"].forEach(s => $(s).addEventListener("input", render));
+$("#refreshBtn").addEventListener("click", () => load());
+function startTimer(){ clearInterval(refreshTimer); if (isLive() && cfg.refreshMinutes > 0) refreshTimer = setInterval(() => load(true), cfg.refreshMinutes*60000); }
+
+let toastT;
+function toast(m){ const t = $("#toast"); t.textContent = m; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), 2600); }
+
+function confetti(){
+  const cv = $("#confetti"), ctx = cv.getContext("2d");
+  cv.width = innerWidth; cv.height = innerHeight;
+  const bits = Array.from({length:170}, () => ({x:innerWidth/2, y:innerHeight/3, vx:(Math.random()-.5)*16, vy:Math.random()*-14-4,
+    s:Math.random()*8+5, c:CONF_COLOURS[Math.floor(Math.random()*CONF_COLOURS.length)], r:Math.random()*6, vr:(Math.random()-.5)*.4}));
+  let f = 0;
+  (function tick(){
+    ctx.clearRect(0,0,cv.width,cv.height);
+    bits.forEach(b => { b.vy += .4; b.x += b.vx; b.y += b.vy; b.r += b.vr;
+      ctx.save(); ctx.translate(b.x,b.y); ctx.rotate(b.r); ctx.fillStyle = b.c; ctx.fillRect(-b.s/2,-b.s/4,b.s,b.s/2); ctx.restore(); });
+    if (++f < 140) requestAnimationFrame(tick); else ctx.clearRect(0,0,cv.width,cv.height);
+  })();
+}
+
+$("#listLink").href = cfg.listUrl + "/AllItems.aspx";
+$("#filterService").innerHTML += cfg.services.map(s => `<option value="${esc(s)}">${(SERVICE_STYLE[s]||{}).emoji||"📄"} ${esc(s)}</option>`).join("");
+fillMe(); startTimer(); load();
+</script>
+</body>
+</html>
